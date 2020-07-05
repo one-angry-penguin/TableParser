@@ -10,6 +10,23 @@
 
     public static class TableParserExtensions
     {
+        public static string ToStringTable<T>(this IEnumerable<T> values)
+        {
+            var x = Expression.Parameter(typeof(T), "x");
+            var list = new List<Expression<Func<T, object>>>();
+
+            foreach (var property in typeof(T).GetProperties())
+            {
+                var body = Expression.Property(x, property);
+                Expression conversion = Expression.Convert(body, typeof(object));
+                var lambda = Expression.Lambda<Func<T, object>>(conversion, x);
+
+                list.Add(lambda);
+            }
+
+            return ToStringTable(values.ToArray(), list.ToArray());
+        }
+        
         public static string ToStringTable<T>(this IEnumerable<T> values, string[] columnHeaders, params Func<T, object>[] valueSelectors)
         {
             return ToStringTable(values.ToArray(), columnHeaders, valueSelectors);
